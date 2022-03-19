@@ -1,0 +1,158 @@
+version: '3'
+
+services:
+
+    mysql:
+        image: mysql:5.7
+        command: --default-authentication-plugin=mysql_native_password
+        container_name: techblog_mysql
+        restart: unless-stopped
+        ports:
+            - 3309:3306
+        volumes:
+            - ./docker/mysql:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: techblog
+            MYSQL_USER: "app_user"
+            MYSQL_PASSWORD: "123456"
+        networks: 
+            - techblog-network
+    
+    php:
+        build:
+            context: ./docker/backend
+            dockerfile: Dockerfile
+        container_name: techblog_php
+        restart: unless-stopped
+        depends_on: 
+            - mysql
+            - redis
+        volumes: 
+            - .:/var/www/html/techblog
+            - ./docker/apache_log/apache2/:/var/log/apache2
+            - ./docker/backend/apache/sites-available:/etc/apache2/sites-available
+            - ./docker/backend/apache/ports.conf:/etc/apache2/ports.conf
+        networks: 
+            - techblog-network
+    
+    react:
+        container_name: techblog_react
+        build:
+            context: ./docker/frontend
+        volumes:
+            - ./frontend:/var/www/html/techblog/frontend
+        restart: always
+        environment:
+            NODE_ENV: development
+            DEBUG: nodejs-docker-express:*
+        networks:
+            - techblog-network
+
+    redis:
+        image: redis:5-alpine
+        container_name: techblog_redis
+        volumes: 
+            - ./docker/redis:/data
+        restart: unless-stopped
+        networks: 
+            - techblog-network
+        
+    nginx_php:
+        image: nginx:latest
+        container_name: techblog_nginx-php
+        volumes: 
+            - ./backend:/var/www/html/techblog/backend
+            - ./docker/nginx_log:/var/log/nginx
+            - ./docker/php-fpm/:/var/log/
+            - ./docker/nginx/php.conf:/etc/nginx/conf.d/php.conf
+        ports:
+            - "9982:80"
+        depends_on: 
+            - php
+        networks: 
+            - techblog-network
+    
+    nginx_react:
+        image: nginx:latest
+        container_name: techblog_nginx-react
+        volumes: 
+            - ./frontend:/var/www/html/techblog/frontend
+            - ./docker/nginx_log:/var/log/nginx
+            - ./docker/nginx/react.conf:/etc/nginx/conf.d/react.conf
+        ports:
+            - "9981:80"
+        depends_on: 
+            - php
+        networks: 
+            - techblog-network
+
+    phpmyadmin:
+        image: phpmyadmin
+        container_name: techblog_phpmyadmin
+        restart: unless-stopped
+        ports:
+            - 8282:80
+        depends_on: 
+            - mysql
+        environment:
+            - PMA_HOST=mysql
+            - PMA_PORT=3306
+            - PMA_USER=root
+            - PMA_PASSWORD=root
+            - MYSQL_ROOT_PASSWORD=root
+            - UPLOAD_LIMIT=64M
+        networks: 
+            - techblog-network
+
+    localstack:
+        container_name: techblog_localstack
+        image: localstack/localstack
+        ports:
+            - "4566:4566"
+            - "4571:4571"
+        environment:
+            - SERVICES=lambda,s3,sqs,ses
+            - DEBUG=${DEBUG-}
+            - DATA_DIR=${DATA_DIR-}
+            - LAMBDA_EXECUTOR=${LAMBDA_EXECUTOR-}
+            - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY-}  # only required for Pro
+            - HOST_TMP_FOLDER=${TMPDIR:-/tmp/}localstack
+            - DOCKER_HOST=unix:///var/run/docker.sock
+            - AWS_ACCESS_KEY_ID=1234
+            - AWS_SECRET_ACCESS_KEY=1234
+            - AWS_DEFAULT_REGION=us-west-2
+        volumes:
+            - "${TMPDIR:-/tmp}/localstack:/tmp/localstack"
+            - "/var/run/docker.sock:/var/run/docker.sock"
+            - ./localstack.sh:/docker-entrypoint-initaws.d/localstack.sh
+        networks:
+            - techblog-network
+        
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.0.1
+        container_name: techblog_elasticsearch
+        environment:
+            - node.name=elasticsearch
+            - cluster.name=datasearch
+            - bootstrap.memory_lock=true
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+            - cluster.initial_master_nodes=elasticsearch
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+        ports:
+            - "9200:9200"
+        networks:
+            - techblog-network
+
+    kibana:
+        image: docker.elastic.co/kibana/kibana:7.0.1
+        container_name: techblog_kibana
+        ports:
+            - "5601:5601"
+        networks:
+            - techblog-network
+networks: 
+    techblog-network:
