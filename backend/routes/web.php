@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\api\v1\LoginController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -12,7 +13,10 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+Route::get('/bla', function () {
+    return ';ssss';
+})->middleware('auth:api');
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('login', function () {
+    return 'ss';
+})->name('login');
