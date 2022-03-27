@@ -1,19 +1,20 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-function Login() {
+function Protected(props) {
+  const Cmp = props.Cmp;
   const nagative = useNavigate();
 
   useEffect(() => {
-    if(localStorage.getItem('user-info'))
+    if(!localStorage.getItem('user-info'))
     {
-      nagative('/add');
+      nagative('/login');
     }
   });
 
   return (
-    <div>Login</div>
+    <div><Cmp/></div>
   )
 }
 
-export default Login
+export default Protected
