@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\api\v1\LoginController;
+use App\Http\Controllers\api\v1\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::controller(LoginController::class)->prefix('auth')->group(function () {
+Route::controller(AuthController::class)->prefix('auth')->group(function () {
     Route::post('/login', 'login');
+    Route::post('/register', 'register');
 });

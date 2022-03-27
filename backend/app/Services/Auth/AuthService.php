@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 use App\Models\User;
 use App\Repositories\User\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
@@ -27,6 +28,20 @@ class AuthService
         return response([
             'user' => Auth::user(),
             'access_token' => $accessToken
+        ]);
+    }
+
+    public function register($req) {
+        $user = $this->userRepo->create([
+            'name' => $req->name,
+            'email' => $req->email,
+            'password' => Hash::make($req->password),
+            'status' => $req->status,
+            'avatar' => $req->avatar
+        ]);
+        return response([
+            'user' => $user,
+            'status' => 201
         ]);
     }
 }

@@ -25,6 +25,7 @@ services:
             dockerfile: Dockerfile
         container_name: techblog_php
         restart: unless-stopped
+        user: "1000"
         depends_on: 
             - mysql
             - redis

@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Services\Auth\AuthService;
 
-class LoginController extends Controller
+class AuthController extends Controller
 {
     private $authServie;
 
@@ -19,5 +19,9 @@ class LoginController extends Controller
 
     public function login(LoginRequest $req) {
         return $this->authServie->login($req);
+    }
+
+    public function register(LoginRequest $req) {
+        return $this->authServie->register($req);
     }
 }
