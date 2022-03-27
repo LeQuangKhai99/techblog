@@ -37,7 +37,7 @@ class AuthService
             'email' => $req->email,
             'password' => Hash::make($req->password),
             'status' => $req->status,
-            'avatar' => $req->avatar
+            'avatar' => $req->file('avatar')->store('avatars')
         ]);
         return response([
             'user' => $user,
