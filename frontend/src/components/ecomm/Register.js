@@ -25,8 +25,11 @@ function Register() {
       }
     });
     result = await result.json();
-    localStorage.setItem("user-info", JSON.stringify(result));
+    if(result.user) {
+      localStorage.setItem("user-info", JSON.stringify(result));
     nagative("/add");
+    }
+    nagative("/login");
   }
 
   return (
